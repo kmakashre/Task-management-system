@@ -1,0 +1,58 @@
+package com.example.Task.Management.System.controller;
+
+
+import com.example.Task.Management.System.Jwt.JwtHelper;
+import com.example.Task.Management.System.Repositry.UserRepository;
+import com.example.Task.Management.System.dto.AuthRequest;
+import com.example.Task.Management.System.dto.AuthResponse;
+import com.example.Task.Management.System.entity.User;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/auth")
+@AllArgsConstructor
+public class AuthController {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager manager;
+    private final UserDetailsService userDetailsService;
+    private final JwtHelper helper;
+
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@Valid @RequestBody User user) {
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            return ResponseEntity.badRequest().body("Username already exists!");
+        }
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        userRepository.save(user);
+        return ResponseEntity.ok("User registered successfully!");
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request) {
+        try {
+            manager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+        } catch (BadCredentialsException e) {
+            throw new BadCredentialsException("Invalid credentials!");
+        }
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
+        String token = this.helper.generateToken(userDetails);
+        return ResponseEntity.ok(new AuthResponse(token));
+    }
+}
