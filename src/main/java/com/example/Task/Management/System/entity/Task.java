@@ -11,9 +11,9 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Task {
 
     @Id

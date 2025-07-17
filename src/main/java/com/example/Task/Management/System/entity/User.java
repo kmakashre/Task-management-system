@@ -1,19 +1,23 @@
 package com.example.Task.Management.System.entity;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 
+
 @Entity
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "users") // avoid using reserved SQL keyword 'user'
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(unique = true, nullable = false)
     private String username;
     private String password;
     private String role;
+
+
 }

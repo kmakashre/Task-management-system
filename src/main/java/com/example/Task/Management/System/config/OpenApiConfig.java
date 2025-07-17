@@ -7,11 +7,11 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @SecurityScheme(
-        name = "BearerAuth",
-        type = SecuritySchemeType.HTTP,
-        scheme = "bearer",
-        bearerFormat = "JWT"
+        name = "BearerAuth",                  // Unique name for security scheme
+        type = SecuritySchemeType.HTTP,      // HTTP type
+        scheme = "bearer",                   // Bearer token authentication
+        bearerFormat = "JWT"                 // Format of the bearer token
 )
-@SecurityRequirement(name = "BearerAuth")
+@SecurityRequirement(name = "BearerAuth") // Applies security globally
 public class OpenApiConfig {
 }

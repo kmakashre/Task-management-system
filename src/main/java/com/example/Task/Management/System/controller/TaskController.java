@@ -1,9 +1,11 @@
 package com.example.Task.Management.System.controller;
 
 import com.example.Task.Management.System.entity.Task;
+import com.example.Task.Management.System.entity.Task.Status;
 import com.example.Task.Management.System.service.TaskService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,40 +14,43 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/tasks")
-@AllArgsConstructor
+@RequestMapping("/api/tasks") // Base URL for task APIs
+@AllArgsConstructor // Lombok annotation to generate constructor for final fields
 public class TaskController {
 
     private final TaskService taskService;
 
+    // Create a new task
     @PostMapping
     public ResponseEntity<Task> createTask(@RequestBody Task task) {
         return ResponseEntity.ok(taskService.createTask(task));
     }
 
+    // Get paginated list of tasks with optional filtering by status and dueDate
     @GetMapping
     public ResponseEntity<Page<Task>> getTasks(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size,
-            @RequestParam(required = false) Task.Status status,
-            @RequestParam(required = false) String dueDate // Example: 2025-07-20T00:00:00
+            @RequestParam(defaultValue = "0") int page,        // Default page number
+            @RequestParam(defaultValue = "10") int size,       // Default page size
+            @RequestParam Optional<Status> status,             // Optional task status filter
+            @RequestParam Optional<LocalDateTime> dueDate      // Optional due date filter
     ) {
-        LocalDateTime due = (dueDate != null) ? LocalDateTime.parse(dueDate) : null;
-        return ResponseEntity.ok(taskService.getTasks(page, size, status, due));
+        PageRequest pageRequest = PageRequest.of(page, size);
+        return ResponseEntity.ok(taskService.getAllTasks(pageRequest, status, dueDate));
     }
 
+    // Get a specific task by its UUID
     @GetMapping("/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable UUID id) {
-        Optional<Task> task = taskService.getTaskById(id);
-        return task.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<Optional<Task>> getTaskById(@PathVariable UUID id) {
+        return ResponseEntity.ok(taskService.getTaskById(id));
     }
 
+    // Update an existing task by its UUID
     @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTask(@PathVariable UUID id, @RequestBody Task task) {
-        Optional<Task> updated = taskService.updateTask(id, task);
-        return updated.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<Optional<Task>> updateTask(@PathVariable UUID id, @RequestBody Task updatedTask) {
+        return ResponseEntity.ok(taskService.updateTask(id, updatedTask));
     }
 
+    // Delete a task by its UUID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable UUID id) {
         taskService.deleteTask(id);
